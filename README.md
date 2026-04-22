@@ -323,8 +323,22 @@ Storage ≈ 44.5M × 10 KB ≈ 445 GB
 
 ### Схема:
 
-```
-Client → DNS → ближайший DC → API Gateway → сервисы
+```mermaid
+flowchart TD
+
+U[Пользователь] --> DNS[GeoDNS / DNS балансировщик]
+
+DNS -->|EU / Germany| DC1[DC Frankfurt]
+DNS -->|RU / CIS| DC2[DC Moscow]
+DNS -->|Asia| DC3[DC Kazakhstan]
+
+DC1 --> API1[API Gateway]
+DC2 --> API2[API Gateway]
+DC3 --> API3[API Gateway]
+
+API1 --> S[Backend сервисы]
+API2 --> S
+API3 --> S
 ```
 
 ---
