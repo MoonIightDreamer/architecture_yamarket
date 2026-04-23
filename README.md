@@ -520,5 +520,168 @@ Target RPS = 4800 × 2 = 9600
 
 ---
 
+# Логическая схема базы данных
+
+## ER-диаграмма
+
+```mermaid
+erDiagram
+
+users ||--o{ orders : creates
+users ||--o{ reviews : writes
+users ||--o{ user_favorites : saves
+users ||--o{ delivery_address : has
+
+orders ||--o{ offers : contains
+offers }o--|| offer_cards : refers
+
+offer_cards ||--o{ reviews : has
+
+shopping_carts }o--|| users : belongs_to
+shopping_carts ||--o{ offer_cards : contains
+
+users {
+    bigint id
+    string email
+    string password_hash
+    string name
+}
+
+delivery_address {
+    bigint id
+    bigint user_id
+    string address
+}
+
+orders {
+    bigint id
+    bigint user_id
+    timestamp created_at
+    string status
+}
+
+offers {
+    bigint id
+    bigint order_id
+    bigint offer_card_id
+    int quantity
+}
+
+offer_cards {
+    bigint id
+    string title
+    float price
+}
+
+reviews {
+    bigint id
+    bigint user_id
+    bigint offer_card_id
+    int rating
+    string text
+}
+
+user_favorites {
+    bigint user_id
+    bigint offer_card_id
+}
+
+shopping_carts {
+    bigint user_id
+    bigint offer_card_id
+    int quantity
+}
+```
+
+---
+
+## Описание таблиц
+
+| Таблица | Назначение | Размер строки |
+|--------|----------|--------------|
+| users | пользователи | ~300 B |
+| delivery_address | адреса | ~200 B |
+| orders | заказы | ~1 KB |
+| offers | позиции заказа | ~200 B |
+| offer_cards | карточки товаров | ~300 B |
+| reviews | отзывы | ~500 B |
+| user_favorites | избранное | ~50 B |
+| shopping_carts | корзина | ~50 B |
+
+---
+
+## Дополнительные данные
+
+| Тип | Описание | Хранение |
+|-----|----------|---------|
+| изображения товаров | фото | S3 / object storage |
+| кеш поиска | результаты запросов | Redis |
+| сессии | авторизация | Redis |
+| логи | события системы | ClickHouse / S3 |
+
+---
+
+## Нагрузка (QPS)
+
+### Чтение
+
+| Таблица | QPS (read) | Причина |
+|--------|-----------|--------|
+| offer_cards | ~3000 | карточки товаров |
+| search (cache) | ~2500 | поиск |
+| reviews | ~500 | отображение отзывов |
+| users | ~300 | профиль |
+
+---
+
+### Запись
+
+| Таблица | QPS (write) | Причина |
+|--------|------------|--------|
+| orders | ~10 | оформление заказа |
+| offers | ~20 | позиции заказа |
+| reviews | ~5 | отзывы |
+| favorites | ~50 | пользовательские действия |
+| carts | ~100 | корзина |
+
+---
+
+## Требования к консистентности
+
+| Домен | Тип консистентности | Обоснование |
+|------|------------------|------------|
+| orders | strong consistency | критично для денег |
+| users | strong consistency | авторизация |
+| cart | eventual consistency | допустимы задержки |
+| favorites | eventual consistency | не критично |
+| reviews | eventual consistency | допустимы лаги |
+| catalog | eventual consistency | кешируется |
+
+---
+
+## Распределение нагрузки по ключам
+
+### Основные ключи:
+
+- user_id → равномерное распределение
+- order_id → высокая уникальность
+- offer_card_id → hotspot (популярные товары)
+
+---
+
+### Особенности:
+
+- **users / orders**  
+  → хорошо шардируются по `user_id`
+
+- **catalog (offer_cards)**  
+  → возможны hot keys (популярные товары)  
+  → требуется кеширование
+
+- **reviews**  
+  → распределение по `offer_card_id`
+
+---
+
 ##
 
