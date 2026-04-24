@@ -257,6 +257,7 @@ Storage ≈ 44.5M × 10 KB ≈ 445 GB
 
 Разбивка происходит не по каждой сущности, а по смыслу:
 
+```mermaid
 flowchart TD
 
 UserDomain --> Users
@@ -271,6 +272,7 @@ EngagementDomain --> Reviews
 EngagementDomain --> Favorites
 
 CartDomain --> Cart
+```
 
 ---
 
