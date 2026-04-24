@@ -253,7 +253,24 @@ Storage ≈ 44.5M × 10 KB ≈ 445 GB
 | reviews | отзывы |
 | api-gateway | единая точка входа |
 
-Такое разбиение позволяет независимо масштабировать наиболее нагруженные компоненты (например, search и catalog).
+Такое разбиение позволяет независимо масштабировать наиболее нагруженные компоненты (например, search и catalog). 
+
+Разбивка происходит не по каждой сущности, а по смыслу:
+
+flowchart TD
+
+UserDomain --> Users
+UserDomain --> Address
+
+OrderDomain --> Orders
+OrderDomain --> OrderItems
+
+CatalogDomain --> OfferCards
+
+EngagementDomain --> Reviews
+EngagementDomain --> Favorites
+
+CartDomain --> Cart
 
 ---
 
